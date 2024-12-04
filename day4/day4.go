@@ -45,14 +45,14 @@ func Day4Part1(filePath string) {
 			letter := matrix[i][j]
 			position := Position[int, int]{i, j}
 			if letter == 'X' {
-				foundWords += searchForString(matrix, position, "XMAS", UP, UP)
+				foundWords += searchForString(matrix, position, "XMAS", UP, NONE)
+				foundWords += searchForString(matrix, position, "XMAS", DOWN, NONE)
+				foundWords += searchForString(matrix, position, "XMAS", RIGHT, NONE)
+				foundWords += searchForString(matrix, position, "XMAS", LEFT, NONE)
 				foundWords += searchForString(matrix, position, "XMAS", UP, LEFT)
 				foundWords += searchForString(matrix, position, "XMAS", UP, RIGHT)
-				foundWords += searchForString(matrix, position, "XMAS", DOWN, DOWN)
 				foundWords += searchForString(matrix, position, "XMAS", UP, LEFT)
 				foundWords += searchForString(matrix, position, "XMAS", UP, RIGHT)
-				foundWords += searchForString(matrix, position, "XMAS", RIGHT, RIGHT)
-				foundWords += searchForString(matrix, position, "XMAS", LEFT, LEFT)
 			}
 		}
 	}
@@ -68,6 +68,7 @@ const (
 	DOWN
 	LEFT
 	RIGHT
+	NONE
 )
 
 type Position[T, U any] struct {
@@ -115,6 +116,8 @@ func navigateOnDirection(position Position[int, int], direction Direction) Posit
 		newPosition.Y--
 	case RIGHT:
 		newPosition.Y++
+	case NONE:
+	default:
 	}
 	return newPosition
 }
