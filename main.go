@@ -1,10 +1,10 @@
 package main
 
 import (
-	"adventOfCode2024/day3"
+	"adventOfCode2024/day4"
 )
 
 func main() {
-	day3.Day3Part1("input.txt")
-	day3.Day3Part2("input.txt")
+	day4.Day4Part1("input.txt")
+	//day3.Day3Part2("input.txt")
 }
