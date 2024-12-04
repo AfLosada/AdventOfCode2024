@@ -85,6 +85,7 @@ func Day2Part2(filePath string) {
 				return abs < 1 || abs > 3
 			})
 		})
+		didRemove := false
 		if outOfBoundsErrIndex != -1 {
 			fmt.Printf("Removed for operation: %v\n index: %v\n value: %v\n", "outOfBouds", outOfBoundsErrIndex, line[outOfBoundsErrIndex])
 			lineWithoutError := sliceWithErrorIndex(line, outOfBoundsErrIndex)
@@ -107,16 +108,21 @@ func Day2Part2(filePath string) {
 			isDiffInbounds = !isDiffOutofBounds1 || !isDiffOutofBounds2
 			if isDiffInbounds {
 				windowedLine = windowedLineWithoutError
+				didRemove = true
 			}
 		}
 
-		isPositive, _ := runCallbackFailure(line, windowedLine, func(w [][]string) (bool, int) {
+		isPositive, errIndex := runCallbackFailure(line, windowedLine, func(w [][]string) (bool, int) {
 			return windowMatches(w, func(window []string) bool {
 				return ContainsDiffGreaterThan(window, func(current int) bool {
 					return current > 0
 				})
 			})
-		}, "positive")
+		}, "positive", didRemove)
+
+		if errIndex != -1 {
+			didRemove = true
+		}
 
 		isNegative, _ := runCallbackFailure(line, windowedLine, func(w [][]string) (bool, int) {
 			return windowMatches(w, func(window []string) bool {
@@ -124,7 +130,7 @@ func Day2Part2(filePath string) {
 					return current < 0
 				})
 			})
-		}, "negative")
+		}, "negative", didRemove)
 
 		isSafe := isDiffInbounds && (isPositive || isNegative)
 		if isSafe {
@@ -166,8 +172,11 @@ func ContainsDiffGreaterThan(w []string, compare func(current int) bool) bool {
 	return compare(diff)
 }
 
-func runCallbackFailure(line []string, w [][]string, callback func(w [][]string) (bool, int), name string) (bool, int) {
+func runCallbackFailure(line []string, w [][]string, callback func(w [][]string) (bool, int), name string, didRemove bool) (bool, int) {
 	pass, errIndex := callback(w)
+	if didRemove {
+		return pass, errIndex
+	}
 	if !pass {
 		newLine := sliceWithErrorIndex(line, errIndex)
 		newLine2 := sliceWithErrorIndex(line, errIndex+1)
