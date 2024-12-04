@@ -78,56 +78,61 @@ func Day2Part2(filePath string) {
 	count := 0
 	for _, line := range lineArr {
 		windowedLine := windowed(line, 2)
-		isDiffOutofBounds := false
-		errPos := slices.IndexFunc(windowedLine, func(window []string) bool {
+		isDiffInbounds := true
+		outOfBoundsErrIndex := slices.IndexFunc(windowedLine, func(window []string) bool {
 			return ContainsDiffGreaterThan(window, func(current int) bool {
 				abs := math.Abs(float64(current))
 				return abs < 1 || abs > 3
 			})
 		})
-		if errPos != -1 {
-			lineWithoutError := append(line[:errPos], line[errPos+1:]...)
-			windowdLineWithoutError := windowed(lineWithoutError, 2)
-			isDiffOutofBounds = slices.ContainsFunc(windowdLineWithoutError, func(window []string) bool {
+		if outOfBoundsErrIndex != -1 {
+			fmt.Printf("Removed for operation: %v\n index: %v\n value: %v\n", "outOfBouds", outOfBoundsErrIndex, line[outOfBoundsErrIndex])
+			lineWithoutError := sliceWithErrorIndex(line, outOfBoundsErrIndex)
+			lineWithoutError2 := sliceWithErrorIndex(line, outOfBoundsErrIndex+1)
+			windowedLineWithoutError := windowed(lineWithoutError, 2)
+			windowedLineWithoutError2 := windowed(lineWithoutError2, 2)
+
+			isDiffOutofBounds1 := slices.ContainsFunc(windowedLineWithoutError, func(window []string) bool {
 				return ContainsDiffGreaterThan(window, func(current int) bool {
 					abs := math.Abs(float64(current))
 					return abs < 1 || abs > 3
 				})
 			})
+			isDiffOutofBounds2 := slices.ContainsFunc(windowedLineWithoutError2, func(window []string) bool {
+				return ContainsDiffGreaterThan(window, func(current int) bool {
+					abs := math.Abs(float64(current))
+					return abs < 1 || abs > 3
+				})
+			})
+			isDiffInbounds = !isDiffOutofBounds1 || !isDiffOutofBounds2
+			if isDiffInbounds {
+				windowedLine = windowedLineWithoutError
+			}
 		}
 
-		isPositive, errPos := windowMatches(windowedLine, func(window []string) bool {
-			return ContainsDiffGreaterThan(window, func(current int) bool {
-				return current > 0
-			})
-		})
-		if !isPositive {
-			lineWithoutError := append(line[:errPos], line[errPos+1:]...)
-			windowdLineWithoutError := windowed(lineWithoutError, 2)
-			isPositive, _ = windowMatches(windowdLineWithoutError, func(window []string) bool {
+		isPositive, _ := runCallbackFailure(line, windowedLine, func(w [][]string) (bool, int) {
+			return windowMatches(w, func(window []string) bool {
 				return ContainsDiffGreaterThan(window, func(current int) bool {
 					return current > 0
 				})
 			})
-		}
-		isNegative, errPos := windowMatches(windowedLine, func(window []string) bool {
-			return ContainsDiffGreaterThan(window, func(current int) bool {
-				return current < 0
-			})
-		})
-		if !isNegative {
-			lineWithoutError := append(line[:errPos], line[errPos+1:]...)
-			windowdLineWithoutError := windowed(lineWithoutError, 2)
-			isNegative, _ = windowMatches(windowdLineWithoutError, func(window []string) bool {
+		}, "positive")
+
+		isNegative, _ := runCallbackFailure(line, windowedLine, func(w [][]string) (bool, int) {
+			return windowMatches(w, func(window []string) bool {
 				return ContainsDiffGreaterThan(window, func(current int) bool {
 					return current < 0
 				})
 			})
-		}
-		isSafe := !isDiffOutofBounds && (isPositive || isNegative)
+		}, "negative")
+
+		isSafe := isDiffInbounds && (isPositive || isNegative)
 		if isSafe {
+			fmt.Println(line)
+			fmt.Printf(" INBOUNDS: %v\n POSITIVE: %v\n NEGATIVE: %v\n", isDiffInbounds, isPositive, isNegative)
 			count++
 		}
+		fmt.Println("=======================================")
 	}
 	fmt.Printf("The amount of safe reports is: %v\n", count)
 }
@@ -159,4 +164,34 @@ func ContainsDiffGreaterThan(w []string, compare func(current int) bool) bool {
 	}
 	diff := second - first
 	return compare(diff)
+}
+
+func runCallbackFailure(line []string, w [][]string, callback func(w [][]string) (bool, int), name string) (bool, int) {
+	pass, errIndex := callback(w)
+	if !pass {
+		newLine := sliceWithErrorIndex(line, errIndex)
+		newLine2 := sliceWithErrorIndex(line, errIndex+1)
+		windowedLine := windowed(newLine, 2)
+		windowedLine2 := windowed(newLine2, 2)
+		answ1, i1 := callback(windowedLine)
+		answ2, i2 := callback(windowedLine2)
+		fmt.Printf("Removed for operation: %v\n index: %v\n value: %v\n", name, errIndex, line[errIndex])
+		if answ1 {
+			return answ1, i1
+		}
+		if answ2 {
+			return answ2, i2
+		}
+	}
+	return pass, errIndex
+}
+
+func sliceWithErrorIndex(line []string, errIndex int) []string {
+	leftPart := line[:errIndex]
+	leftPartCopy := make([]string, len(leftPart))
+	copy(leftPartCopy, leftPart)
+	rightPart := line[errIndex+1:]
+	rightPartCopy := make([]string, len(rightPart))
+	copy(rightPartCopy, rightPart)
+	return append(leftPartCopy, rightPartCopy...)
 }

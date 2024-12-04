@@ -5,6 +5,6 @@ import (
 )
 
 func main() {
-	day2.Day2Part1("test.txt")
-	day2.Day2Part2("test.txt")
+	//day2.Day2Part1("input.txt")
+	day2.Day2Part2("input.txt")
 }
